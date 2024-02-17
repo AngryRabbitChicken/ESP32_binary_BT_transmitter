@@ -1,34 +1,26 @@
+#include <binary_stream.h>
 
-
-#include <stdint.h>
-#include "binary_stream.h"
-
-Stream::Stream(uint32_t sampling_rate_in_hz, uint16_t timeout_time_in_ms) : timeout_time_in_ms(timeout_time_in_ms)
+GenericBTStream::GenericBTStream(uint32_t sampling_rate_in_hz, uint16_t timeout_time_in_ms) : timeout_time_in_ms(timeout_time_in_ms)
 {
-    t_delta = (double)1 / sampling_rate_in_hz;
+    t_delta = (double) 1 / sampling_rate_in_hz;
 }
 
-void Stream::prep_transmission()
+void GenericBTStream::prep_transmission()
 {
     stream_data_t last_capture = request_data(timeout_time_in_ms);
-    if (last_capture.edge != SLEEP)
+    last_caught_edge = last_capture.edge;
+    time_of_last_event += last_capture.t_interval;
+    if (last_capture.edge == SLEEP)
     {
-        last_caught_edge = last_capture.edge;
-        time_of_last_event += last_capture.t_interval;
-        if (TX_STATUS == IDLE)
-        {
-            TX_STATUS = WAKEUP;
-        }
-    }
-    else
-    {
-        last_caught_edge = LO;
-        time_of_last_event += (double)timeout_time_in_ms * 1e-3;
         TX_STATUS = IDLE;
+    }
+    else if (TX_STATUS == IDLE)
+    {
+        TX_STATUS = WAKEUP;
     }
 };
 
-int16_t Stream::create_tx_value()
+int16_t GenericBTStream::create_tx_value()
 {
     if (current_time > time_of_last_event)
     {

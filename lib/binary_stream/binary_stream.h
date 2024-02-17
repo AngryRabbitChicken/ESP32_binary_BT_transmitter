@@ -2,7 +2,6 @@
 #define BINARY_STREAM_H
 
 #include <stdint.h>
-struct cap_event_data_t;
 
 typedef enum
 {
@@ -17,7 +16,7 @@ typedef struct
     double t_interval;
 } stream_data_t;
 
-class Stream
+class GenericBTStream
 {
 private:
     double current_time = 0;
@@ -34,7 +33,7 @@ private:
     void prep_transmission();
 
 public:
-    Stream(uint32_t sampling_rate_in_hz, uint16_t timeout_time_in_ms);
+    GenericBTStream(uint32_t sampling_rate_in_hz, uint16_t timeout_time_in_ms);
     int16_t create_tx_value();
     virtual stream_data_t request_data(uint16_t timeout_time_in_ms) = 0;
 };

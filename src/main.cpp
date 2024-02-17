@@ -1,15 +1,12 @@
 
 #include <Arduino.h>
-#include "binary_stream.h"
-//#include <global_defs.h>
-#include "freertos/ringbuf.h"
-#include "driver/mcpwm.h"
-#include "soc/rtc.h"
-#include "BluetoothA2DPSource.h"
-#define ONBOARD_LED GPIO_NUM_2
-#define SIGIN GPIO_NUM_23
-#define TESTPIN GPIO_NUM_3
-#define BLTSSID "SSTC Roswita"
+#include <freertos/ringbuf.h>
+#include <driver/mcpwm.h>
+#include <soc/rtc.h>
+#include <BluetoothA2DPSource.h>
+
+#include <binary_stream.h>
+#include <global_defs.h>
 
 RingbufHandle_t buf_handle = NULL;
 BluetoothA2DPSource a2dp_source;
@@ -33,8 +30,8 @@ cap_event_data_t *buffer_read(RingbufHandle_t buffer_handle, uint16_t timeout_in
   }
   return item;
 }
-/*
-class MCPWM_Stream : public Stream
+
+class MCPWM_Stream : public GenericBTStream
 {
 private:
   uint32_t last_edge_time = 0;
@@ -42,7 +39,7 @@ private:
   double calc_time_since_last_event(uint32_t current_edge_time);
 
 public:
-  using Stream::Stream; // Inherit the constructor
+  using GenericBTStream::GenericBTStream; // Inherit the constructor
   stream_data_t request_data(uint16_t);
 };
 
@@ -79,8 +76,8 @@ stream_data_t MCPWM_Stream::request_data(uint16_t timeout_time_in_ms)
   cap_event_data_t *last_capture = buffer_read(buf_handle, timeout_time_in_ms);
   if (last_capture != NULL)
   {
-    return_val.edge = HI;//translate_edge(last_capture->cap_edge);
-    return_val.t_interval =(double) 0; //calc_time_since_last_event(last_capture->cap_value);
+    return_val.edge = translate_edge(last_capture->cap_edge);
+    return_val.t_interval = calc_time_since_last_event(last_capture->cap_value);
   }
   else
   {
@@ -91,13 +88,13 @@ stream_data_t MCPWM_Stream::request_data(uint16_t timeout_time_in_ms)
 };
 
 MCPWM_Stream mcpwm_stream(44100, 10); // first arg: sampling rate in Hz, second arg: timeout time of streaming request in ms
-*/
+
 int32_t prep_transmission(Frame *frame, int32_t requested_samples)
 {
 
   for (int32_t current_sample = 0; current_sample < requested_samples; current_sample++)
   {
-    uint16_t tx_value = 0; // mcpwm_stream.create_tx_value();
+    uint16_t tx_value = mcpwm_stream.create_tx_value();
 
     frame[current_sample].channel1 = tx_value;
     frame[current_sample].channel2 = tx_value;
