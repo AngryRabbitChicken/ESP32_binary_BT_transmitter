@@ -40,7 +40,7 @@ private:
 
 public:
   using GenericBTStream::GenericBTStream; // Inherit the constructor
-  stream_data_t request_data(uint16_t);
+  void request_data(uint16_t timeout_time_in_ms);
 };
 
 double MCPWM_Stream::calc_time_since_last_event(uint32_t current_edge_time)
@@ -64,27 +64,26 @@ stream_edge_t MCPWM_Stream::translate_edge(mcpwm_capture_on_edge_t lce)
 {
   if (lce == MCPWM_POS_EDGE)
     return HI;
-  else if (lce == MCPWM_NEG_EDGE)
+  else 
     return LO;
-  else
-    return SLEEP;
 };
 
-stream_data_t MCPWM_Stream::request_data(uint16_t timeout_time_in_ms)
+void MCPWM_Stream::request_data(uint16_t timeout_time_in_ms)
 {
-  stream_data_t return_val;
   cap_event_data_t *last_capture = buffer_read(buf_handle, timeout_time_in_ms);
   if (last_capture != NULL)
   {
-    return_val.edge = translate_edge(last_capture->cap_edge);
-    return_val.t_interval = calc_time_since_last_event(last_capture->cap_value);
+    last_caught_edge = translate_edge(last_capture->cap_edge);
+    time_of_last_event += calc_time_since_last_event(last_capture->cap_value);
+    if (TX_STATUS == IDLE)
+      TX_STATUS = WAKEUP;
   }
   else
   {
-    return_val.edge = SLEEP;
-    return_val.t_interval = (double)timeout_time_in_ms * 1e-3;
+    TX_STATUS = IDLE;
+    last_caught_edge = HI;
+    time_of_last_event += (double)timeout_time_in_ms * 1e-3;
   }
-  return return_val;
 };
 
 MCPWM_Stream mcpwm_stream(44100, 10); // first arg: sampling rate in Hz, second arg: timeout time of streaming request in ms

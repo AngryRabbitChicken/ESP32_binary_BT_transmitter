@@ -5,26 +5,11 @@ GenericBTStream::GenericBTStream(uint32_t sampling_rate_in_hz, uint16_t timeout_
     t_delta = (double) 1 / sampling_rate_in_hz;
 }
 
-void GenericBTStream::prep_transmission()
-{
-    stream_data_t last_capture = request_data(timeout_time_in_ms);
-    last_caught_edge = last_capture.edge;
-    time_of_last_event += last_capture.t_interval;
-    if (last_capture.edge == SLEEP)
-    {
-        TX_STATUS = IDLE;
-    }
-    else if (TX_STATUS == IDLE)
-    {
-        TX_STATUS = WAKEUP;
-    }
-};
-
 int16_t GenericBTStream::create_tx_value()
 {
     if (current_time > time_of_last_event)
     {
-        prep_transmission();
+        request_data(timeout_time_in_ms);
     }
 
     int16_t tx_value = -32768;

@@ -6,23 +6,22 @@
 typedef enum
 {
     HI,
-    LO,
-    SLEEP
+    LO
 } stream_edge_t;
-
-typedef struct
-{
-    stream_edge_t edge;
-    double t_interval;
-} stream_data_t;
 
 class GenericBTStream
 {
 private:
-    double current_time = 0;
-    double time_of_last_event = 0;
+    double current_time = 0;    
     double t_delta;
-    uint16_t timeout_time_in_ms;
+    uint16_t timeout_time_in_ms;    
+    
+    //void prep_transmission();
+
+public:
+    GenericBTStream(uint32_t sampling_rate_in_hz, uint16_t timeout_time_in_ms);
+
+    double time_of_last_event = 0;
     stream_edge_t last_caught_edge = HI;
     enum
     {
@@ -30,12 +29,9 @@ private:
         WAKEUP,
         ACTIVE
     } TX_STATUS;
-    void prep_transmission();
 
-public:
-    GenericBTStream(uint32_t sampling_rate_in_hz, uint16_t timeout_time_in_ms);
     int16_t create_tx_value();
-    virtual stream_data_t request_data(uint16_t timeout_time_in_ms) = 0;
+    virtual void request_data(uint16_t timeout_time_in_ms) = 0;
 };
 
 #endif
